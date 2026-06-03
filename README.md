@@ -6,7 +6,6 @@ The first step was performing reconnaissance against the target using Nmap in or
 <br><br>
 <img width="942" height="482" alt="image" src="https://github.com/user-attachments/assets/3ab912d0-562e-4dd8-84e7-2976ca6e7ded" />
 <br><br>
-
 The scan revealed several open ports, including SSH on port 22, an HTTP service running Apache Tomcat on port 8080, and the AJP13 service on port 8009. The presence of AJP immediately stood out as a potential attack vector due to known vulnerabilities affecting Apache Tomcat.
 
 ## Web Enumeration
@@ -15,7 +14,6 @@ With the initial scan completed, the next step was to investigate the web applic
 <br><br>
 <img width="1299" height="820" alt="image" src="https://github.com/user-attachments/assets/c1de1ecd-7e4f-4001-b1b0-2c2677f58692" />
 <br><br>
-
 Accessing the service revealed the default Apache Tomcat page, confirming the version in use and providing additional information about the environment.
 
 Attempts were made to access the Manager App, Host Manager, and Server Status interfaces.
@@ -40,17 +38,14 @@ After confirming the vulnerability, Metasploit was launched to simplify the expl
 <br><br>
 <img width="783" height="422" alt="image" src="https://github.com/user-attachments/assets/174a5aec-0044-4dc6-8fbd-cbff25c5444f" />
 <br><br>
-
 The Ghostcat module was selected and configured against the target.
 <br><br>
 <img width="931" height="38" alt="image" src="https://github.com/user-attachments/assets/8b33b173-ad2d-4076-a518-88467cd32909" />
 <br><br>
-
 Successful exploitation allowed access to internal application files, revealing credentials embedded within the application's configuration.
 <br><br>
 <img width="658" height="507" alt="image" src="https://github.com/user-attachments/assets/b7db2ac0-36d6-488b-b126-076400025c09" />
 <br><br>
-
 ## Initial Access
 
 During the enumeration phase, an SSH service had already been identified on port 22. The recovered credentials were therefore tested against SSH authentication.
@@ -65,7 +60,6 @@ After obtaining shell access, the home directories were explored to identify add
 <br><br>
 <img width="519" height="158" alt="image" src="https://github.com/user-attachments/assets/b495cceb-f009-4f99-bdc4-ecf4f0af0432" />
 <br><br>
-
 During this process, the user flag was located within Merlin's home directory.
 
 ## Privilege Escalation Enumeration
@@ -74,7 +68,6 @@ Several privilege escalation checks were performed, including SUID enumeration a
 <br><br>
 <img width="589" height="273" alt="image" src="https://github.com/user-attachments/assets/36205c6a-a0a9-4434-b2c7-83aed0c58f7c" />
 <br><br>
-
 As a result, attention shifted toward files located in Skyfuck's home directory.
 
 ## PGP Key Discovery
@@ -83,12 +76,10 @@ Two files immediately attracted attention: `credential.pgp` and `tryhackme.asc`.
 <br><br>
 <img width="271" height="39" alt="image" src="https://github.com/user-attachments/assets/9aa11ba1-a88f-41fd-8ad7-96be54dacfbe" />
 <br><br>
-
 Inspecting the `tryhackme.asc` file revealed a PGP private key.
 <br><br>
 <img width="587" height="474" alt="image" src="https://github.com/user-attachments/assets/1b553f5d-d697-485a-ba4d-f46740a3c611" />
 <br><br>
-
 The key was copied to the attack machine for further analysis.
 
 ## Cracking the PGP Passphrase
@@ -97,29 +88,24 @@ The PGP key hash was extracted in preparation for password cracking.
 <br><br>
 <img width="365" height="85" alt="image" src="https://github.com/user-attachments/assets/6befe03f-0688-4e6a-b8d4-308f1e36b223" />
 <br><br>
-
 The extracted hash was successfully cracked using John the Ripper, revealing the passphrase protecting the private key.
 <br><br>
 <img width="925" height="233" alt="image" src="https://github.com/user-attachments/assets/8a76ada6-c890-4054-aa4d-95ad25cc4df9" />
 <br><br>
-
 ## Decrypting Stored Credentials
 
 Returning to the target machine, the private key was imported into GPG.
 <br><br>
 <img width="654" height="166" alt="image" src="https://github.com/user-attachments/assets/d66bce59-23b6-4497-9279-03022e2a5f22" />
 <br><br>
-
 Verification confirmed that the import was successful and that the key belonged to the TryHackMe user.
 <br><br>
 <img width="463" height="108" alt="image" src="https://github.com/user-attachments/assets/425f5e68-3382-4480-8136-ef2816799176" />
 <br><br>
-
 Using the recovered passphrase, the encrypted file `credential.pgp` was decrypted.
 <br><br>
 <img width="714" height="195" alt="image" src="https://github.com/user-attachments/assets/868ad0d1-a26a-40c6-93a9-f25fddadf363" />
 <br><br>
-
 The decrypted content revealed credentials belonging to the user `merlin`.
 
 ## Pivoting to Merlin
@@ -128,7 +114,6 @@ With valid credentials recovered, it was possible to switch from the `skyfuck` a
 <br><br>
 <img width="563" height="60" alt="image" src="https://github.com/user-attachments/assets/11734069-f262-413e-89e9-627e987143fe" />
 <br><br>
-
 This provided access to a new user context and opened additional privilege escalation opportunities.
 
 ## Sudo Misconfiguration
@@ -137,7 +122,6 @@ Enumerating sudo permissions revealed a critical misconfiguration.
 <br><br>
 <img width="728" height="114" alt="image" src="https://github.com/user-attachments/assets/7318263c-7d5e-4c8b-b5b0-25ea6b06de54" />
 <br><br>
-
 The user `merlin` was allowed to execute the `zip` binary as root without requiring a password.
 
 ## Privilege Escalation via GTFOBins
@@ -146,7 +130,6 @@ A search through GTFOBins revealed that the `zip` binary could be abused to obta
 <br><br>
 <img width="879" height="271" alt="image" src="https://github.com/user-attachments/assets/c6cbd872-9e27-484d-88d3-f31556d6342d" />
 <br><br>
-
 Executing the provided technique successfully spawned a root shell.
 <br><br>
 <img width="643" height="125" alt="image" src="https://github.com/user-attachments/assets/83091ff9-43d3-46a4-8787-844b20151557" />
@@ -158,7 +141,6 @@ With root privileges obtained, navigation to the root user's directory was possi
 <br><br>
 <img width="399" height="96" alt="image" src="https://github.com/user-attachments/assets/a242d9be-ca02-40a2-a0db-f0124e33e5f1" />
 <br><br>
-
 The root flag was successfully retrieved, completing the machine.
 
 ## Key Learning Points
